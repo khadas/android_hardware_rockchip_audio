@@ -507,7 +507,11 @@ static int read_snd_card_info(void)
     }else if(strstr(buf0,"rockchiprt5640c")){
         PCM_CARD_HDMI = 0;
 		PCM_CARD = 0;
-	}
+	} else if(strstr(buf1,"realtekrt5651co")&&strstr(buf2,"rkhdmidpsound")) {
+        PCM_CARD_SPDIF = 0;
+        PCM_CARD =1;
+        PCM_CARD_HDMI = 2;
+    }
 
 #ifdef RK3399_LAPTOP
     if (strstr (buf1, "rockchipbt")) {
@@ -522,7 +526,26 @@ static int read_snd_card_info(void)
 #endif
     return 0;
 }
-#ifdef BOX_HAL
+
+
+static inline bool hasExtCodec()
+{
+    char line[80];
+    bool ret = false;
+    FILE *fd = fopen("proc/asound/cards","r");
+    if(NULL != fd){
+      memset(line, 0, 80);
+      while((fgets(line,80,fd))!= NULL){
+          line[80-1]='\0';
+          if(strstr(line,"realtekrt5651co")){
+              ret = true;
+              break;
+          }
+      }
+      fclose(fd);
+    }
+    return ret;
+}
 
 /**
  * @brief read_hdmi_connect_state
@@ -567,7 +590,6 @@ static inline bool hasSpdif()
     return ret;
 }
 
-#endif
 
 /**
  * @brief mixer_mode_set
@@ -643,32 +665,25 @@ static int start_output_stream(struct stream_out *out)
         out->device &= ~AUDIO_DEVICE_OUT_SPDIF;
         out->device |= AUDIO_DEVICE_OUT_AUX_DIGITAL;
     }
-#ifdef BOX_HAL
-    if (out->device & AUDIO_DEVICE_OUT_AUX_DIGITAL) {
-        /*BOX hdmi & codec use the same i2s,so only config the codec card*/
-        out->device &= ~AUDIO_DEVICE_OUT_SPEAKER;
-    }
-    read_snd_card_info();
-    if (out->config.flag == HW_PARAMS_FLAG_LPCM){
-        if(hasSpdif() && ((out->device & AUDIO_DEVICE_OUT_SPDIF)==0)){
-           out->device |= AUDIO_DEVICE_OUT_SPDIF;
-       }
-    }
-#ifdef RK3228
-    if (out->config.flag == HW_PARAMS_FLAG_LPCM) {
+    if (!hasExtCodec()) {
         if (out->device & AUDIO_DEVICE_OUT_AUX_DIGITAL) {
-            out->device |= AUDIO_DEVICE_OUT_SPEAKER;
+        /*BOX hdmi & codec use the same i2s,so only config the codec card*/
+            out->device &= ~AUDIO_DEVICE_OUT_SPEAKER;
         }
+        read_snd_card_info();
+        if (out->config.flag == HW_PARAMS_FLAG_LPCM){
+           if(hasSpdif() && ((out->device & AUDIO_DEVICE_OUT_SPDIF)==0)){
+              out->device |= AUDIO_DEVICE_OUT_SPDIF;
+           }
+        }
+        out_dump(out, 0);
     }
-#endif
-    out_dump(out, 0);
-#endif
     connect_hdmi = true;
     route_pcm_open(getRouteFromDevice(out->device));
 
     if (out->device & AUDIO_DEVICE_OUT_AUX_DIGITAL) {
         if (connect_hdmi) {
-#ifdef BOX_HAL
+          if (!hasExtCodec()) {
 #ifdef USE_DRM
             int ret = 0;
             ret = mixer_mode_set(out);
@@ -677,7 +692,7 @@ static int start_output_stream(struct stream_out *out)
                 ALOGE("mixer mode set error,ret=%d!",ret);
             }
 #endif
-#endif
+          }
             out->pcm[PCM_CARD_HDMI] = pcm_open(PCM_CARD_HDMI, out->pcm_device,
                                                 PCM_OUT | PCM_MONOTONIC, &out->config);
             if (out->pcm[PCM_CARD_HDMI] &&
@@ -1138,11 +1153,11 @@ static void do_out_standby(struct stream_out *out)
              * necessary when restarted */
             force_non_hdmi_out_standby(adev);
         }
-#ifdef BOX_HAL
+        if (!hasExtCodec()) {
 #ifdef USE_DRM
         mixer_mode_set(out);
 #endif
-#endif
+        }
         if (out->device & AUDIO_DEVICE_OUT_ALL_SCO)
             stop_bt_sco(adev);
 
@@ -1606,17 +1621,16 @@ false_alarm:
         ret = -EPIPE;
         goto exit;
     }
-
-#ifdef BOX_HAL
-    if (out->config.format == PCM_FORMAT_S24_LE) {
-        if (out->bitstream_buffer == NULL) {
-            out->bitstream_buffer = (char *)malloc(newbytes);
-            ALOGD("new bitstream buffer!");
-        }
-        memset(out->bitstream_buffer, 0x00, newbytes);
-        fill_hdmi_bitstream_buf((void *)buffer, (void *)out->bitstream_buffer,(void*)out->channel_buffer, (int)bytes);
+    if(!hasExtCodec()) {
+       if (out->config.format == PCM_FORMAT_S24_LE) {
+          if (out->bitstream_buffer == NULL) {
+              out->bitstream_buffer = (char *)malloc(newbytes);
+              ALOGD("new bitstream buffer!");
+           }
+           memset(out->bitstream_buffer, 0x00, newbytes);
+           fill_hdmi_bitstream_buf((void *)buffer, (void *)out->bitstream_buffer,(void*)out->channel_buffer, (int)bytes);
+       }
     }
-#endif    
 
     if (out->muted)
         memset((void *)buffer, 0, bytes);
@@ -1643,13 +1657,13 @@ false_alarm:
     /* Write to all active PCMs */
     if ((out->output_direct) && (out->device & AUDIO_DEVICE_OUT_AUX_DIGITAL)) {
         if (out->pcm[PCM_CARD_HDMI] != NULL) {
-#ifdef BOX_HAL
-            if(out->config.format == PCM_FORMAT_S16_LE){
-                ret = pcm_write(out->pcm[PCM_CARD_HDMI], (void *)buffer, bytes);
-            }else if(out->config.format == PCM_FORMAT_S24_LE){
-                ret = pcm_write(out->pcm[PCM_CARD_HDMI], (void *)out->bitstream_buffer, newbytes);
-            }
-#endif
+            if (!hasExtCodec()) {
+               if(out->config.format == PCM_FORMAT_S16_LE){
+                   ret = pcm_write(out->pcm[PCM_CARD_HDMI], (void *)buffer, bytes);
+               }else if(out->config.format == PCM_FORMAT_S24_LE){
+                   ret = pcm_write(out->pcm[PCM_CARD_HDMI], (void *)out->bitstream_buffer, newbytes);
+               }
+        }
             if (ret != 0) {
                 goto exit;
             }

@@ -110,15 +110,9 @@
 
 #define AUDIO_HAL_VERSION "ALSA Audio Version: V1.1.0"
 
-#ifdef BOX_HAL
-int PCM_CARD = 0;
-int PCM_CARD_HDMI = 0;
-int PCM_CARD_SPDIF = 1;
-#else
 int PCM_CARD = 0;
 int PCM_CARD_HDMI = 1;
-int PCM_CARD_SPDIF = 2;
-#endif
+int PCM_CARD_SPDIF = 1;
 int PCM_BT = 3;
 #define PCM_TOTAL 4
 #define PCM_DEVICE 0
