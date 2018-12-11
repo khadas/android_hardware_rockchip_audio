@@ -114,6 +114,7 @@ int PCM_CARD = 1;
 int PCM_CARD_HDMI = 0;
 int PCM_CARD_SPDIF = 0;
 int PCM_BT = 3;
+int PCM_CARD_HDMIIN = 0;
 #define PCM_TOTAL 4
 #define PCM_DEVICE 0
 #define PCM_DEVICE_SCO 1
