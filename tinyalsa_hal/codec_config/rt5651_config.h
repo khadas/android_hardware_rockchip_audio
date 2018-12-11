@@ -1007,7 +1007,7 @@ const struct config_route_table rt5651_config_table = {
 
     //headphone
     .headphone_normal = {
-        .sound_card = 0,
+        .sound_card = 1,
         .devices = DEVICES_0,
         .controls = rt5651_headphone_normal_controls,
         .controls_count = sizeof(rt5651_headphone_normal_controls) / sizeof(struct config_control),
@@ -1137,19 +1137,19 @@ const struct config_route_table rt5651_config_table = {
     },
     //hdmi
     .hdmi_normal = {
-        .sound_card = 1,
+        .sound_card = 2,
         .devices = DEVICES_0,
         .controls_count = 0,
     },
 
     //usb audio
     .usb_normal = {
-        .sound_card = 2,
+        .sound_card = 3,
         .devices = DEVICES_0,
         .controls_count = 0,
     },
     .usb_capture = {
-        .sound_card = 2,
+        .sound_card = 3,
         .devices = DEVICES_0,
         .controls_count = 0,
     },

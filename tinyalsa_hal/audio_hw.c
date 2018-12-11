@@ -90,6 +90,7 @@ FILE *in_debug;
 
 int in_dump(const struct audio_stream *stream, int fd);
 int out_dump(const struct audio_stream *stream, int fd);
+static inline bool hasExtCodec();
 
 /**
  * @brief get_output_device_id
@@ -507,9 +508,10 @@ static int read_snd_card_info(void)
     }else if(strstr(buf0,"rockchiprt5640c")){
         PCM_CARD_HDMI = 0;
 		PCM_CARD = 0;
-	} else if(strstr(buf1,"realtekrt5651co")&&strstr(buf2,"rkhdmidpsound")) {
+    }
+    if (hasExtCodec()) {
         PCM_CARD_SPDIF = 0;
-        PCM_CARD =1;
+        PCM_CARD = 1;
         PCM_CARD_HDMI = 2;
     }
 
