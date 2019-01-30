@@ -110,12 +110,6 @@
 
 #define AUDIO_HAL_VERSION "ALSA Audio Version: V1.1.0"
 
-int PCM_CARD = 1;
-int PCM_CARD_HDMI = 0;
-int PCM_CARD_SPDIF = 0;
-int PCM_BT = 3;
-int PCM_CARD_HDMIIN = 0;
-#define PCM_TOTAL 4
 #define PCM_DEVICE 0
 #define PCM_DEVICE_SCO 1
 #define PCM_DEVICE_VOICE 2
@@ -157,12 +151,6 @@ int PCM_CARD_HDMIIN = 0;
 #else
 #define HDMI_AUIOINFO_NODE      "/sys/class/display/HDMI/audioinfo"
 #endif
-
-#define HDMI_CONNECTION_NODE    "/sys/class/display/HDMI/connect"
-#define SND_CARD0_NODE          "/proc/asound/card0/id"
-#define SND_CARD1_NODE          "/proc/asound/card1/id"
-#define SND_CARD2_NODE          "/proc/asound/card2/id"
-#define MEDIA_SINK_AUDIO        "media.sink.audio"
 
 #ifdef BOX_HAL
 struct pcm_config pcm_config = {
@@ -312,6 +300,23 @@ struct direct_mode_t {
     char* hbr_Buf;
 };
 
+enum snd_out_sound_cards {
+    SND_OUT_SOUND_CARD_UNKNOWN = -1,
+    SND_OUT_SOUND_CARD_SPEAKER = 0,
+    SND_OUT_SOUND_CARD_HDMI,
+    SND_OUT_SOUND_CARD_SPDIF,
+    SND_OUT_SOUND_CARD_BT,
+    SND_OUT_SOUND_CARD_MAX,
+};
+
+enum snd_in_sound_cards {
+    SND_IN_SOUND_CARD_UNKNOWN = -1,
+    SND_IN_SOUND_CARD_MIC = 0,
+    SND_IN_SOUND_CARD_BT,
+    SND_IN_SOUND_CARD_HDMI,
+    SND_IN_SOUND_CARD_MAX,
+};
+
 struct audio_device {
     struct audio_hw_device hw_device;
 
@@ -332,7 +337,7 @@ struct audio_device {
     struct pcm *pcm_hfp_in;
     struct pcm *pcm_hdmiin_in;
     struct pcm *pcm_hdmiin_out;
-    int hdmi_drv_fd;    /* either an fd >= 0 or -1 */
+
     audio_channel_mask_t in_channel_mask;
     unsigned int sco_on_count;
     unsigned int hfp_on_count;
@@ -346,13 +351,17 @@ struct audio_device {
     rk_process_api* voice_api;
 #endif
 
+    // store the sound card number of output devices
+    int out_card[SND_OUT_SOUND_CARD_MAX];
+    // store the sound card number of input devices
+    int in_card[SND_IN_SOUND_CARD_MAX];
 };
 
 struct stream_out {
     struct audio_stream_out stream;
 
     pthread_mutex_t lock; /* see note below on mutex acquisition order */
-    struct pcm *pcm[PCM_TOTAL];
+    struct pcm *pcm[SND_OUT_SOUND_CARD_MAX];
     struct pcm_config config;
     struct audio_config aud_config;
     unsigned int pcm_device;
@@ -586,11 +595,6 @@ const struct route_config * const route_configs[IN_SOURCE_TAB_SIZE]
         &speaker_and_headphones     /* OUT_DEVICE_SPEAKER_AND_HEADSET */
     }
 };
-
-
-struct mixer* pre_mixer;
-pthread_t hdmi_uevent_t = 0;
-int prop_pcm;//for debug
 
 static void do_out_standby(struct stream_out *out);
 #endif
