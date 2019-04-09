@@ -659,6 +659,7 @@ static int start_output_stream(struct stream_out *out)
     out->disabled = false;
     read_hdmi_audioinfo();
 
+    ALOGD("======device==== origin=0x%x", out->device);
     int device = getOutputDevice();
     if (device == SPDIF_PASSTHROUGH_MODE) {
         out->device &= ~AUDIO_DEVICE_OUT_AUX_DIGITAL;
@@ -695,6 +696,7 @@ static int start_output_stream(struct stream_out *out)
             }
 #endif
           }
+     ALOGD("=========device is AUDIO_DEVICE_OUT_AUX_DIGITAL");
             out->pcm[PCM_CARD_HDMI] = pcm_open(PCM_CARD_HDMI, out->pcm_device,
                                                 PCM_OUT | PCM_MONOTONIC, &out->config);
             if (out->pcm[PCM_CARD_HDMI] &&
@@ -710,20 +712,31 @@ static int start_output_stream(struct stream_out *out)
         }
     }
 
+    ALOGD("===========device======0x%x", out->device);
     if (out->device & (AUDIO_DEVICE_OUT_SPEAKER |
                        AUDIO_DEVICE_OUT_WIRED_HEADSET |
                        AUDIO_DEVICE_OUT_WIRED_HEADPHONE |
                        AUDIO_DEVICE_OUT_ALL_SCO)) {
-
-        out->pcm[PCM_CARD] = pcm_open(PCM_CARD, out->pcm_device,
+       if (!hasExtCodec()) {
+            out->pcm[PCM_CARD_HDMI] = pcm_open(PCM_CARD_HDMI, out->pcm_device,
+                                                PCM_OUT | PCM_MONOTONIC, &out->config);
+            if (out->pcm[PCM_CARD_HDMI] &&
+                    !pcm_is_ready(out->pcm[PCM_CARD_HDMI])) {
+                ALOGE("pcm_open(PCM_CARD_HDMI) failed: %s",
+                      pcm_get_error(out->pcm[PCM_CARD_HDMI]));
+                pcm_close(out->pcm[PCM_CARD_HDMI]);
+                return -ENOMEM;
+            }
+        } else {
+             out->pcm[PCM_CARD] = pcm_open(PCM_CARD, out->pcm_device,
                                       PCM_OUT | PCM_MONOTONIC, &out->config);
-        if (out->pcm[PCM_CARD] && !pcm_is_ready(out->pcm[PCM_CARD])) {
-            ALOGE("pcm_open(PCM_CARD) failed: %s",
-                  pcm_get_error(out->pcm[PCM_CARD]));
-            pcm_close(out->pcm[PCM_CARD]);
-            return -ENOMEM;
+             if (out->pcm[PCM_CARD] && !pcm_is_ready(out->pcm[PCM_CARD])) {
+                ALOGE("pcm_open(PCM_CARD) failed: %s",
+                      pcm_get_error(out->pcm[PCM_CARD]));
+                pcm_close(out->pcm[PCM_CARD]);
+                return -ENOMEM;
+             }
         }
-
     }
 
     if (out->device & AUDIO_DEVICE_OUT_SPDIF) {
