@@ -524,7 +524,7 @@ void route_pcm_open(uint32_t route)
     }
 #endif
 
-    ALOGV("route_pcm_open() route %d", route);
+    ALOGD("route_pcm_open() route %d", route);
 
     is_playback = is_playback_route(route);
 
@@ -566,7 +566,7 @@ void route_pcm_open(uint32_t route)
             mMixerPlayback = mixer_open_legacy(route_info->sound_card);
     } else {
         if (mMixerCapture == NULL)
-            mMixerCapture = mixer_open_legacy(route_info->sound_card == 1 ? 0 : route_info->sound_card);
+            mMixerCapture = mixer_open_legacy(/*route_info->sound_card == 1 ? 0 : */route_info->sound_card);
     }
 
     //set controls
