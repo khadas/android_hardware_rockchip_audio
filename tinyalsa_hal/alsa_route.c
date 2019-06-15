@@ -65,9 +65,9 @@ int route_init(void)
 
     ALOGV("route_init()");
 
-    fp = fopen("/proc/asound/card0/id", "rt");
+    fp = fopen("/proc/asound/card1/id", "rt");
     if (!fp) {
-        ALOGE("Open sound card0 id error!");
+        ALOGE("Open sound card1 id error!");
     } else {
         read_size = fread(soundCardID, sizeof(char), sizeof(soundCardID), fp);
         fclose(fp);
@@ -77,7 +77,7 @@ int route_init(void)
             soundCardID[read_size] = '\0';
         }
 
-        ALOGV("Sound card0 is %s", soundCardID);
+        ALOGV("Sound card1 is %s", soundCardID);
 
         for (i = 0; i < config_count; i++) {
             if (!(sound_card_config_list + i) || !sound_card_config_list[i].sound_card_name ||
@@ -87,14 +87,14 @@ int route_init(void)
             if (strncmp(sound_card_config_list[i].sound_card_name, soundCardID, 
                 read_size) == 0) {
                 route_table = sound_card_config_list[i].route_table;
-                ALOGD("Get route table for sound card0 %s", soundCardID);
+                ALOGD("Get route table for sound card1 %s", soundCardID);
             }
         }
     }
 
     if (!route_table) {
         route_table = &default_config_table;
-        ALOGD("Can not get config table for sound card0 %s, so get default config table.", soundCardID);
+        ALOGD("Can not get config table for sound card1 %s, so get default config table.", soundCardID);
     }
 
     for (i = PCM_DEVICE0_PLAYBACK; i < PCM_MAX; i++)
@@ -483,7 +483,7 @@ void route_pcm_open(uint32_t route)
     }
 #endif
 
-    ALOGV("route_pcm_open() route %d", route);
+    ALOGD("route_pcm_open() route %d", route);
 
     is_playback = is_playback_route(route);
 
@@ -522,10 +522,10 @@ void route_pcm_open(uint32_t route)
     //update mMixer
     if (is_playback) {
         if (mMixerPlayback == NULL)
-            mMixerPlayback = mixer_open_legacy(route_info->sound_card == 1 ? 0 : route_info->sound_card);
+            mMixerPlayback = mixer_open_legacy(route_info->sound_card);
     } else {
         if (mMixerCapture == NULL)
-            mMixerCapture = mixer_open_legacy(route_info->sound_card == 1 ? 0 : route_info->sound_card);
+            mMixerCapture = mixer_open_legacy(/*route_info->sound_card == 1 ? 0 : */route_info->sound_card);
     }
 
     //set controls
