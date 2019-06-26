@@ -364,6 +364,13 @@ static bool is_hdmi_out_sound_card(char* buf)
 
 static bool is_spdif_out_sound_card(char* buf)
 {
+    const char* NAME [] =
+    {
+       "rockchipspdif",
+       "rockchipcdndpso",
+    };
+    int length = sizeof(NAME)/sizeof(char*);
+
     if(buf == NULL)
         return false;
 
@@ -371,8 +378,9 @@ static bool is_spdif_out_sound_card(char* buf)
      * hdmi: diffrent product may have diffrent card name,modify codes here
      * for example: 2 [rockchipspdif  ]: rockchip-spdif - rockchip-spdif
      */
-    if(strstr(buf,"rockchipspdif")&& strstr(buf,":")){
-        return true;
+    for(int i = 0; i < length; i ++) {
+        if(strstr(buf,NAME[i]) && strstr(buf,":"))
+            return true;
     }
 
     // add codes here
@@ -775,7 +783,7 @@ if (!hasExtCodec()){
                        AUDIO_DEVICE_OUT_ALL_SCO)) {
         card = adev->out_card[SND_OUT_SOUND_CARD_SPEAKER];
         if(card != (int)SND_OUT_SOUND_CARD_UNKNOWN) {
-			if (out->device & (AUDIO_DEVICE_OUT_WIRED_HEADSET |AUDIO_DEVICE_OUT_WIRED_HEADPHONE)) {		
+			if (out->device & (AUDIO_DEVICE_OUT_WIRED_HEADSET |AUDIO_DEVICE_OUT_WIRED_HEADPHONE)) {	
 	            out->pcm[SND_OUT_SOUND_CARD_SPEAKER] = pcm_open(card, out->pcm_device,
 	                                          PCM_OUT | PCM_MONOTONIC, &out->config);
 	            if (out->pcm[SND_OUT_SOUND_CARD_SPEAKER] && !pcm_is_ready(out->pcm[SND_OUT_SOUND_CARD_SPEAKER])) {
