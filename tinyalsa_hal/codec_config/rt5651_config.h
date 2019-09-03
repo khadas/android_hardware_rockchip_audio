@@ -96,11 +96,10 @@ const struct config_control rt5651_speaker_normal_controls[] = {
             .int_val = {on},
         },
     */
-    {
+     {
         .ctl_name = "RT5651 ASRC Switch",
-        .int_val = {1},
+        .str_val = "Disable",
     },
-
     {
         .ctl_name = "DAC MIXL INF1 Switch",
         .int_val = {on},
@@ -160,9 +159,8 @@ const struct config_control rt5651_speaker_incall_controls[] = {
 const struct config_control rt5651_speaker_ringtone_controls[] = {
     {
         .ctl_name = "RT5651 ASRC Switch",
-        .int_val = {1},
+        .str_val = "Disable",
     },
-
     {
         .ctl_name = "DAC MIXL INF1 Switch",
         .int_val = {on},
@@ -217,7 +215,7 @@ const struct config_control rt5651_speaker_ringtone_controls[] = {
 const struct config_control rt5651_speaker_voip_controls[] = {
     {
         .ctl_name = "RT5651 ASRC Switch",
-        .int_val = {1},
+        .str_val = "Disable",
     },
     {
         .ctl_name = "DAC MIXL INF1 Switch",
@@ -272,7 +270,7 @@ const struct config_control rt5651_speaker_voip_controls[] = {
 const struct config_control rt5651_earpiece_normal_controls[] = {
     {
         .ctl_name = "RT5651 ASRC Switch",
-        .int_val = {1},
+        .str_val = "Disable",
     },
     {
         .ctl_name = "DAC MIXL INF1 Switch",
@@ -356,7 +354,7 @@ const struct config_control rt5651_earpiece_voip_controls[] = {
 const struct config_control rt5651_headphone_normal_controls[] = {
     {
         .ctl_name = "RT5651 ASRC Switch",
-        .int_val = {1},
+        .str_val = "Disable",
     },
     {
         .ctl_name = "DAC MIXL INF1 Switch",
@@ -423,7 +421,7 @@ const struct config_control rt5651_headphone_incall_controls[] = {
 const struct config_control rt5651_headphone_ringtone_controls[] = {
     {
         .ctl_name = "RT5651 ASRC Switch",
-        .int_val = {1},
+        .str_val = "Disable",
     },
     {
         .ctl_name = "DAC MIXL INF1 Switch",
@@ -494,7 +492,7 @@ const struct config_control rt5651_speaker_headphone_ringtone_controls[] = {
 const struct config_control rt5651_headphone_voip_controls[] = {
     {
         .ctl_name = "RT5651 ASRC Switch",
-        .int_val = {1},
+        .str_val = "Disable",
     },
     {
         .ctl_name = "DAC MIXL INF1 Switch",
@@ -557,7 +555,7 @@ const struct config_control rt5651_headphone_voip_controls[] = {
 const struct config_control rt5651_headset_normal_controls[] = {
     {
         .ctl_name = "RT5651 ASRC Switch",
-        .int_val = {1},
+        .str_val = "Disable",
     },
     {
         .ctl_name = "DAC MIXL INF1 Switch",
@@ -624,7 +622,7 @@ const struct config_control rt5651_headset_incall_controls[] = {
 const struct config_control rt5651_headset_ringtone_controls[] = {
     {
         .ctl_name = "RT5651 ASRC Switch",
-        .int_val = {1},
+        .str_val = "Disable",
     },
     {
         .ctl_name = "DAC MIXL INF1 Switch",
@@ -687,7 +685,7 @@ const struct config_control rt5651_headset_ringtone_controls[] = {
 const struct config_control rt5651_headset_voip_controls[] = {
     {
         .ctl_name = "RT5651 ASRC Switch",
-        .int_val = {1},
+        .str_val = "Disable",
     },
     {
         .ctl_name = "DAC MIXL INF1 Switch",
@@ -761,10 +759,6 @@ const struct config_control rt5651_bluetooth_voip_controls[] = {
 
 const struct config_control rt5651_hands_free_mic_capture_controls[] = {
     {
-        .ctl_name = "RT5651 ASRC Switch",
-        .int_val = {1},
-    },
-    {
         .ctl_name = "RECMIXL BST3 Switch",
         .int_val = {on},
     },
@@ -821,10 +815,6 @@ const struct config_control rt5651_main_mic_capture_controls[] = {
          .int_val = {on},
      },*/
     {
-         .ctl_name = "RT5651 ASRC Switch",
-         .int_val = {1},
-    },
-    {
         .ctl_name = "RECMIXL BST2 Switch",
         .int_val = {on},
     },
@@ -868,37 +858,11 @@ const struct config_control rt5651_bluetooth_sco_mic_capture_controls[] = {
 };
 
 const struct config_control rt5651_playback_off_controls[] = {
-    {
-        .ctl_name = "RT5651 ASRC Switch",
-        .int_val = {1},
-    },
+
 };
 
 const struct config_control rt5651_capture_off_controls[] = {
-    {
-        .ctl_name = "RT5651 ASRC Switch",
-        .int_val = {1},
-    },
-    {
-        .ctl_name = "RECMIXL BST2 Switch",
-        .int_val = {off},
-    },
-    {
-        .ctl_name = "RECMIXR BST2 Switch",
-        .int_val = {off},
-    },
-    {
-        .ctl_name = "Stereo1 ADC MIXL ADC1 Switch",
-        .int_val = {off},
-    },
-    {
-        .ctl_name = "Stereo1 ADC MIXR ADC1 Switch",
-        .int_val = {off},
-    },
-    {
-        .ctl_name = "ADC Capture Switch",
-        .int_val = {off, off},
-    },
+
 };
 
 const struct config_control rt5651_incall_off_controls[] = {
@@ -912,19 +876,23 @@ const struct config_control rt5651_voip_off_controls[] = {
 const struct config_control rt5651_hdmiin_normal_controls[] = {
     {
         .ctl_name = "RT5651 ASRC Switch",
-        .int_val = {1},
+        .str_val = "Enable",
     },
     {
-        .ctl_name = "IF2 ASRC Switch",
-        .int_val = {1},
+        .ctl_name = "DAC MIXL INF1 Switch",
+        .int_val = {on},
     },
     {
-        .ctl_name = "DAC L2 Mux",
-        .str_val = "IF2",
+        .ctl_name = "DAC MIXR INF1 Switch",
+        .int_val = {on},
     },
     {
-        .ctl_name = "DAC R2 Mux",
-        .str_val = "IF2",
+        .ctl_name = "Stereo DAC MIXL DAC L1 Switch",
+        .int_val = {off},
+    },
+    {
+        .ctl_name = "Stereo DAC MIXR DAC R1 Switch",
+        .int_val = {off},
     },
     {
         .ctl_name = "Stereo DAC MIXL DAC L2 Switch",
@@ -974,27 +942,15 @@ const struct config_control rt5651_hdmiin_normal_controls[] = {
         .ctl_name = "DAC1 Playback Volume",
         .int_val = {175, 175},
     },
+
 };
 
 const struct config_control rt5651_hdmiin_off_controls[] = {
     {
         .ctl_name = "RT5651 ASRC Switch",
-        .int_val = {1},
-    },
-    {
-        .ctl_name = "Stereo DAC MIXL DAC L2 Switch",
-        .int_val = {off},
-    },
-    {
-        .ctl_name = "Stereo DAC MIXR DAC R2 Switch",
-        .int_val = {off},
-    },
-    {
-        .ctl_name = "ADC Capture Switch",
-        .int_val = {1, 1},
+        .str_val = "Disable",
     },
 };
-
 const struct config_control rt5651_hdmiin_captrue_controls[] = {
     {
         .ctl_name = "RT5651 ASRC Switch",
