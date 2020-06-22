@@ -70,6 +70,17 @@ const struct config_control es8316_headphone_voip_controls[] = {
 };
 
 const struct config_control es8316_headset_normal_controls[] = {
+    {
+        .ctl_name = "DAC Playback Volume",
+        .int_val = {192, 192},
+    },
+    {
+        .ctl_name = "Left Headphone Mixer Left DAC Switch",
+        .int_val = {on},
+    },
+    {
+        .ctl_name = "Right Headphone Mixer Right DAC Switch",
+    },
 };
 
 const struct config_control es8316_headset_incall_controls[] = {
