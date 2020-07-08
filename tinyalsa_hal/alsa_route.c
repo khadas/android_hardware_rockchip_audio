@@ -585,10 +585,10 @@ void route_pcm_open(uint32_t route)
     //update mMixer
     if (is_playback) {
         if (mMixerPlayback == NULL)
-            mMixerPlayback = mixer_open_legacy(route_info->sound_card == 1 ? 0 : route_info->sound_card);
+            mMixerPlayback = mixer_open_legacy(route_info->sound_card);
     } else {
         if (mMixerCapture == NULL)
-            mMixerCapture = mixer_open_legacy(route_info->sound_card == 1 ? 0 : route_info->sound_card);
+            mMixerCapture = mixer_open_legacy(route_info->sound_card);
     }
 
     //set controls
