@@ -1041,8 +1041,7 @@ static int start_output_stream(struct stream_out *out)
 
     if (out->device & (AUDIO_DEVICE_OUT_SPEAKER |
                        AUDIO_DEVICE_OUT_WIRED_HEADSET |
-                       AUDIO_DEVICE_OUT_WIRED_HEADPHONE |
-                       AUDIO_DEVICE_OUT_ALL_SCO)) {
+                       AUDIO_DEVICE_OUT_WIRED_HEADPHONE )) {
         audio_devices_t route_device = out->device & (AUDIO_DEVICE_OUT_SPEAKER |
                                                       AUDIO_DEVICE_OUT_WIRED_HEADSET |
                                                       AUDIO_DEVICE_OUT_WIRED_HEADPHONE |
@@ -1085,6 +1084,27 @@ static int start_output_stream(struct stream_out *out)
             }
         }
     }
+		if (out->device & AUDIO_DEVICE_OUT_ALL_SCO) {
+	#ifdef BT_AP_SCO // HARD CODE FIXME
+			card = adev->dev_out[SND_OUT_SOUND_CARD_BT].card;
+			device = adev->dev_out[SND_OUT_SOUND_CARD_BT].device;
+			ALOGD("pcm_open bt card number = %d",card);
+			if(card != (int)SND_OUT_SOUND_CARD_UNKNOWN) {
+				out->pcm[SND_OUT_SOUND_CARD_BT] = pcm_open(card, 0,
+											PCM_OUT | PCM_MONOTONIC, &pcm_config_ap_sco);
+				ret = create_resampler(out->config.rate,
+									   pcm_config_ap_sco.rate,
+									   2,
+									   RESAMPLER_QUALITY_DEFAULT,
+									   NULL,
+									   &out->resampler);
+				if (ret != 0) {
+					ret = -EINVAL;
+				}
+			}
+	#endif
+		}
+	
 
     adev->out_device |= out->device;
     ALOGD("%s:%d, out = %p",__FUNCTION__,__LINE__,out);
@@ -1297,9 +1317,10 @@ static int start_input_stream(struct stream_in *in)
     read_in_sound_card(in);
     route_pcm_card_open(adev->dev_in[SND_IN_SOUND_CARD_MIC].card,
                         getRouteFromDevice(in->device | AUDIO_DEVICE_BIT_IN));
+	ALOGE("%s dev:%x,mode %x",__FUNCTION__,in->device,adev->mode);
 #ifdef RK3399_LAPTOP //HARD CODE FIXME
-    if ((in->device & AUDIO_DEVICE_IN_BLUETOOTH_SCO_HEADSET) &&
-            (adev->mode == AUDIO_MODE_IN_COMMUNICATION)) {
+    if ((in->device & AUDIO_DEVICE_IN_BLUETOOTH_SCO_HEADSET)
+           /*&&  (adev->mode == AUDIO_MODE_IN_COMMUNICATION)*/) {
         in->config = &pcm_config_in_bt;
         card = adev->dev_in[SND_IN_SOUND_CARD_BT].card;
         device =  adev->dev_in[SND_IN_SOUND_CARD_BT].device;
@@ -1311,7 +1332,7 @@ static int start_input_stream(struct stream_in *in)
                 in->buf_provider.get_next_buffer = get_next_buffer;
                 in->buf_provider.release_buffer = release_buffer;
 
-                ret = create_resampler(8000,
+                ret = create_resampler(in->config->rate,
                                        in->requested_rate,
                                        audio_channel_count_from_in_mask(in->channel_mask),
                                        RESAMPLER_QUALITY_DEFAULT,
@@ -1338,7 +1359,7 @@ static int start_input_stream(struct stream_in *in)
                 in->buf_provider.get_next_buffer = get_next_buffer;
                 in->buf_provider.release_buffer = release_buffer;
 
-                ret = create_resampler(48000,
+                ret = create_resampler(in->config->rate,
                                        in->requested_rate,
                                        audio_channel_count_from_in_mask(in->channel_mask),
                                        RESAMPLER_QUALITY_DEFAULT,
@@ -2408,7 +2429,7 @@ false_alarm:
                 if (i == SND_OUT_SOUND_CARD_BT) {
                     // HARD CODE FIXME 48000 stereo -> 8000 stereo
                     size_t inFrameCount = bytes/2/2;
-                    size_t outFrameCount = inFrameCount/6;
+                    size_t outFrameCount = inFrameCount/(out->config.rate/pcm_config_ap_sco.rate);
                     int16_t out_buffer[outFrameCount*2];
                     memset(out_buffer, 0x00, outFrameCount*2);
 

@@ -90,10 +90,10 @@ ifeq ($(strip $(TARGET_BOARD_PLATFORM)),rk3588)
     LOCAL_CFLAGS += -DRK3588
     LOCAL_CFLAGS += -DIEC958_FORAMT
 endif
-ifeq ($(strip $(TARGET_BOARD_PLATFORM_PRODUCT)), laptop)
+#ifeq ($(strip $(TARGET_BOARD_PLATFORM_PRODUCT)), laptop)
 LOCAL_CFLAGS += -DRK3399_LAPTOP
 LOCAL_CFLAGS += -DBT_AP_SCO
-endif
+#endif
 ifeq ($(AUD_VOICE_CONFIG),voice_support)
 LOCAL_CFLAGS += -DVOICE_SUPPORT
 endif
