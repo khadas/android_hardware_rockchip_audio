@@ -329,6 +329,7 @@ struct dev_proc_info SPDIF_OUT_NAME[] =
     {"ROCKCHIPSPDIF", "dit-hifi",},
     {"rockchipspdif", NULL,},
     {"rockchipcdndp", NULL,},
+    {"rockchipdp0", NULL,},
     {NULL, NULL}, /* Note! Must end with NULL, else will cause crash */
 };
 
