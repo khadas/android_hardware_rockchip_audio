@@ -238,6 +238,7 @@ struct dev_proc_info HDMI_OUT_NAME[] =
     {"realtekrt5670co", "i2s-hifi",},
     {"rkhdmidpsound", NULL,},
     {"hdmisound", NULL},
+    {"rockchiphdmi", NULL,},
     {"rockchiphdmi0", NULL,},
     {"rockchiprt5640c", "i2s-hifi",},
     {NULL, NULL}, /* Note! Must end with NULL, else will cause crash */
