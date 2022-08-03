@@ -913,8 +913,10 @@ static void do_out_standby(struct stream_out *out)
     int i;
     ALOGD("%s,out = %p,device = 0x%x",__FUNCTION__,out,out->device);
     if (!out->standby) {
-        pcm_close(out->pcm);
-        out->pcm = NULL;
+        if (out->pcm) {
+            pcm_close(out->pcm);
+            out->pcm = NULL;
+        }
         out->standby = true;
         out->nframes = 0;
         /* re-calculate the set of active devices from other streams */
