@@ -88,12 +88,12 @@
 #define CAPTURE_START_RAMP_MS 100
 
 /* default sampling for default output */
-#define DEFAULT_PLAYBACK_SAMPLERATE 44100
+#define DEFAULT_PLAYBACK_SAMPLERATE 48000
 
 #define DEFAULT_PLAYBACK_CHANNELS 2
 
 /* default sampling for HDMI multichannel output */
-#define HDMI_MULTI_DEFAULT_SAMPLING_RATE  44100
+#define HDMI_MULTI_DEFAULT_SAMPLING_RATE  48000
 /* maximum number of channel mask configurations supported. Currently the primary
  * output only supports 1 (stereo) and the multi channel HDMI output 2 (5.1 and 7.1) */
 #define MAX_SUPPORTED_CHANNEL_MASKS 2
@@ -106,23 +106,6 @@
 #define HW_PARAMS_FLAG_LPCM 0
 #define HW_PARAMS_FLAG_NLPCM 1
 
-#ifdef BOX_HAL
-struct pcm_config pcm_config = {
-    .channels = 2,
-    .rate = 48000,
-    .period_size = 512,
-    .period_count = 3,
-    .format = PCM_FORMAT_S16_LE,
-};
-
-struct pcm_config pcm_config_in = {
-    .channels = 2,
-    .rate = 48000,
-    .period_size = 1024,
-    .period_count = 4,
-    .format = PCM_FORMAT_S16_LE,
-};
-#elif defined RK3399_LAPTOP
 struct pcm_config pcm_config = {
     .channels = 2,
     .rate = 48000,
@@ -134,35 +117,14 @@ struct pcm_config pcm_config = {
 struct pcm_config pcm_config_in = {
     .channels = 2,
     .rate = 48000,
-    .period_size = 120,
+    .period_size = 480,   // 10ms
     .period_count = 4,
     .format = PCM_FORMAT_S16_LE,
 };
-#else
-struct pcm_config pcm_config = {
-    .channels = 2,
-    .rate = 44100,
-    .period_size = 512,
-    .period_count = 6,
-    .format = PCM_FORMAT_S16_LE,
-};
-
-struct pcm_config pcm_config_in = {
-    .channels = 2,
-    .rate = 44100,
-#ifdef RK_DENOISE_ENABLE
-    .period_size = 441,
-#else
-    .period_size = 256,
-#endif
-    .period_count = 4,
-    .format = PCM_FORMAT_S16_LE,
-};
-#endif
 
 struct pcm_config pcm_config_in_low_latency = {
     .channels = 2,
-    .rate = 44100,
+    .rate = 48000,
     .period_size = 256,
     .period_count = 4,
     .format = PCM_FORMAT_S16_LE,
@@ -179,11 +141,11 @@ struct pcm_config pcm_config_sco = {
 /* for bt client call*/
 struct pcm_config pcm_config_hfp = {
     .channels = 2,
-    .rate = 44100,
+    .rate = 48000,
     .period_size = 256,
     .period_count = 4,
 };
-#ifdef BT_AP_SCO
+
 struct pcm_config pcm_config_ap_sco = {
     .channels = 2,
     .rate = 8000,
@@ -198,10 +160,10 @@ struct pcm_config pcm_config_in_bt = {
     .period_count = 4,
     .format = PCM_FORMAT_S16_LE,
 };
-#endif
+
 struct pcm_config pcm_config_deep = {
     .channels = 2,
-    .rate = 44100,
+    .rate = 48000,
     /* FIXME This is an arbitrary number, may change.
      * Dynamic configuration based on screen on/off is not implemented;
      * let's see what power consumption is first to see if necessary.
@@ -307,6 +269,9 @@ struct audio_device {
 
     struct dev_info dev_out[SND_OUT_SOUND_CARD_MAX];
     struct dev_info dev_in[SND_IN_SOUND_CARD_MAX];
+
+    bool bt_wb_speech_enabled;
+    unsigned int bt_sco_reroute;
 };
 
 struct stream_out {

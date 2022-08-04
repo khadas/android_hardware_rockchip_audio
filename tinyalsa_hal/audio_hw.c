@@ -1137,6 +1137,31 @@ static int start_output_stream(struct stream_out *out)
 		}
 	
 
+    if (out->device & AUDIO_DEVICE_OUT_ALL_SCO) {
+        card = adev->dev_out[SND_OUT_SOUND_CARD_BT].card;
+        device = adev->dev_out[SND_OUT_SOUND_CARD_BT].device;
+        ALOGD("pcm_open bt card number = %d, device=%d",card, device);
+        struct pcm_config *pcm_config = &pcm_config_ap_sco;
+        pcm_config->rate = adev->bt_wb_speech_enabled?16000:8000;
+
+        ALOGD("%s pcm_open bt card number = %d, device=%d, src rate: %d dest rate:%d, wbs:%d",
+                __func__, card, device, out->config.rate, pcm_config->rate, adev->bt_wb_speech_enabled);
+        if(card != (int)SND_OUT_SOUND_CARD_UNKNOWN) {
+            out->pcm[SND_OUT_SOUND_CARD_BT] = pcm_open(card, device,
+                                PCM_OUT | PCM_MONOTONIC, pcm_config);
+            ret = create_resampler(out->config.rate,
+                    pcm_config->rate,
+                    2,
+                    RESAMPLER_QUALITY_DEFAULT,
+                    NULL,
+                    &out->resampler);
+
+            if (ret != 0) {
+                ret = -EINVAL;
+            }
+        }
+    }
+
     adev->out_device |= out->device;
     ALOGD("%s:%d, out = %p",__FUNCTION__,__LINE__,out);
     return 0;
@@ -1346,91 +1371,43 @@ static int start_input_stream(struct stream_in *in)
     channel_check_start(in);
     in_dump(in, 0);
     read_in_sound_card(in);
-    route_pcm_card_open(adev->dev_in[SND_IN_SOUND_CARD_MIC].card,
-                        getRouteFromDevice(in->device | AUDIO_DEVICE_BIT_IN));
-	ALOGE("%s dev:%x,mode %x",__FUNCTION__,in->device,adev->mode);
-#ifdef RK3399_LAPTOP //HARD CODE FIXME
-    if ((in->device & AUDIO_DEVICE_IN_BLUETOOTH_SCO_HEADSET)
-           /*&&  (adev->mode == AUDIO_MODE_IN_COMMUNICATION)*/) {
-        in->config = &pcm_config_in_bt;
+
+    if (in->device & AUDIO_DEVICE_IN_BLUETOOTH_SCO_HEADSET) {
+        in->config->rate = adev->bt_wb_speech_enabled?16000:8000;
         card = adev->dev_in[SND_IN_SOUND_CARD_BT].card;
         device =  adev->dev_in[SND_IN_SOUND_CARD_BT].device;
-        if(card != SND_IN_SOUND_CARD_UNKNOWN){
+
+        if (card != SND_IN_SOUND_CARD_UNKNOWN) {
             in->pcm = pcm_open(card, device, PCM_IN, in->config);
-            if (in->resampler) {
-                release_resampler(in->resampler);
-
-                in->buf_provider.get_next_buffer = get_next_buffer;
-                in->buf_provider.release_buffer = release_buffer;
-
-                ret = create_resampler(in->config->rate,
-                                       in->requested_rate,
-                                       audio_channel_count_from_in_mask(in->channel_mask),
-                                       RESAMPLER_QUALITY_DEFAULT,
-                                       &in->buf_provider,
-                                       &in->resampler);
-                if (ret != 0) {
-                    ret = -EINVAL;
-                }
-            }
         } else {
             ALOGE("%s: %d,the card number of bt is = %d",__FUNCTION__,__LINE__,card);
             return -EINVAL;
         }
-    } else {
-        in->config = &pcm_config_in;
-        card = adev->dev_in[SND_IN_SOUND_CARD_MIC].card;
-        device =  adev->dev_in[SND_IN_SOUND_CARD_MIC].device;
-        if (card != SND_IN_SOUND_CARD_UNKNOWN) {
-            in->pcm = pcm_open(card, device, PCM_IN, in->config);
-
-            if (in->resampler) {
-                release_resampler(in->resampler);
-
-                in->buf_provider.get_next_buffer = get_next_buffer;
-                in->buf_provider.release_buffer = release_buffer;
-
-                ret = create_resampler(in->config->rate,
-                                       in->requested_rate,
-                                       audio_channel_count_from_in_mask(in->channel_mask),
-                                       RESAMPLER_QUALITY_DEFAULT,
-                                       &in->buf_provider,
-                                       &in->resampler);
-                if (ret != 0) {
-                    ret = -EINVAL;
-                }
-            }
-        } else {
-            ALOGE("%s: %d,the card number of mic is %d",__FUNCTION__,__LINE__,card);
-            return -EINVAL;
-        }
-    }
-#else
-    card = (int)adev->dev_in[SND_IN_SOUND_CARD_HDMI].card;
-    if (in->device & AUDIO_DEVICE_IN_HDMI && (card != (int)SND_OUT_SOUND_CARD_UNKNOWN)) {
+    } else if (in->device & AUDIO_DEVICE_IN_HDMI) {
         if (get_hdmiin_audio_info(adev, "audio_present", &hdmiin_present)) {
             if (!hdmiin_present) {
                 ALOGD("hdmiin audio is no present, don't open hdmiin sound");
                 return -EEXIST;
             }
         }
-        in->config->rate = get_hdmiin_audio_rate(adev);
-        in->pcm = pcm_open(card, PCM_DEVICE, PCM_IN, in->config);
-        ALOGD("open HDMIIN %d", card);
-        if (in->resampler) {
-            release_resampler(in->resampler);
-            in->resampler = NULL;
-        }
+        card = (int)adev->dev_in[SND_IN_SOUND_CARD_HDMI].card;
+        device =  adev->dev_in[SND_IN_SOUND_CARD_HDMI].device;
 
-        // if hdmiin connect to codec, don't resample
-        if (in->config->rate != in->requested_rate) {
-            ret = create_resampler_helper(in, in->config->rate);
+        if (card != SND_IN_SOUND_CARD_UNKNOWN) {
+            in->config->rate = get_hdmiin_audio_rate(adev);
+            in->pcm = pcm_open(card, device, PCM_IN, in->config);
+            ALOGD("open HDMIIN %d", card);
         }
-    } else if (in->device & AUDIO_DEVICE_IN_BUILTIN_MIC ||
-               in->device & AUDIO_DEVICE_IN_WIRED_HEADSET) {
+    } else {
+        ALOGD("open build mic");
         card = adev->dev_in[SND_IN_SOUND_CARD_MIC].card;
         device =  adev->dev_in[SND_IN_SOUND_CARD_MIC].device;
-        in->pcm = pcm_open(card, device, PCM_IN, in->config);
+
+        if (card != SND_IN_SOUND_CARD_UNKNOWN) {
+            route_pcm_card_open(card, getRouteFromDevice(in->device | AUDIO_DEVICE_BIT_IN));
+            in->pcm = pcm_open(card, device, PCM_IN, in->config);
+        }
+
 #ifdef RK_DENOISE_ENABLE
         {
             int ch = in->config->channels;
@@ -1451,16 +1428,24 @@ static int start_input_stream(struct stream_in *in)
         }
 #endif
 
-    } else {
-        card = adev->dev_in[SND_IN_SOUND_CARD_BT].card;
-        device = adev->dev_in[SND_IN_SOUND_CARD_BT].device;
-        in->pcm = pcm_open(card, device, PCM_IN, in->config);
     }
-#endif
-    if (in->pcm && !pcm_is_ready(in->pcm)) {
-        ALOGE("pcm_open() failed: %s", pcm_get_error(in->pcm));
-        pcm_close(in->pcm);
+
+    if (in->pcm == NULL || !pcm_is_ready(in->pcm)) {
+        if (in->pcm != NULL) {
+            ALOGE("pcm_open() failed: %s", pcm_get_error(in->pcm));
+            pcm_close(in->pcm);
+        }
+
+        ALOGD("%s open card = %d, device = %d fail", __func__, card, device);
         return -ENOMEM;
+    }
+
+    if (in->config->rate != in->requested_rate) {
+        ret = create_resampler_helper(in, in->config->rate);
+        if (ret < 0 || in->resampler == NULL) {
+            pcm_close(in->pcm);
+            return -EINVAL;
+        }
     }
 
     /* if no supported sample rate is available, use the resampler */
@@ -1477,7 +1462,6 @@ static int start_input_stream(struct stream_in *in)
     in->ramp_frames = (CAPTURE_START_RAMP_MS * in->requested_rate) / 1000;
     in->ramp_step = (uint16_t)(USHRT_MAX / in->ramp_frames);
     in->ramp_vol = 0;;
-
 
     return 0;
 }
@@ -1880,6 +1864,7 @@ static int out_set_parameters(struct audio_stream *stream, const char *kvpairs)
         val = atoi(value);
         /* Don't switch HDMI audio in box products */
         if ((val != 0) && ((out->device & val) != val) ||
+            (val != 0) && (val & AUDIO_DEVICE_OUT_ALL_SCO) ||
             (val != 0) && !(out->device & AUDIO_DEVICE_OUT_HDMI)) {
             /* Force standby if moving to/from SPDIF or if the output
              * device changes when in SPDIF mode */
@@ -1891,7 +1876,8 @@ static int out_set_parameters(struct audio_stream *stream, const char *kvpairs)
 
             /* force output standby to start or stop SCO pcm stream if needed */
             if ((val & AUDIO_DEVICE_OUT_ALL_SCO) ^
-                    (out->device & AUDIO_DEVICE_OUT_ALL_SCO)) {
+                    (out->device & AUDIO_DEVICE_OUT_ALL_SCO) || adev->bt_sco_reroute) {
+                adev->bt_sco_reroute = 0;
                 do_out_standby(out);
             }
 
@@ -2460,7 +2446,12 @@ false_alarm:
                 if (i == SND_OUT_SOUND_CARD_BT) {
                     // HARD CODE FIXME 48000 stereo -> 8000 stereo
                     size_t inFrameCount = bytes/2/2;
-                    size_t outFrameCount = inFrameCount/(out->config.rate/pcm_config_ap_sco.rate);
+
+                    int destRate = out->config.rate;
+                    int srcRate = adev->bt_wb_speech_enabled? 16000:8000;
+                    int coefficient = (destRate/srcRate);
+                    size_t outFrameCount = inFrameCount/coefficient;
+
                     int16_t out_buffer[outFrameCount*2];
                     memset(out_buffer, 0x00, outFrameCount*2);
 
@@ -3559,6 +3550,23 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
     }
 #endif
 
+    ret = str_parms_get_str(parms, AUDIO_PARAMETER_KEY_BT_SCO_WB, value, sizeof(value));
+    if (ret >= 0) {
+        adev->bt_wb_speech_enabled = !strcmp(value, AUDIO_PARAMETER_VALUE_ON);
+        ALOGD("%s: adev:0x%p, bt_wb_speech_enabled = %d",
+            __func__, adev, adev->bt_wb_speech_enabled);
+    }
+
+    ret = str_parms_get_str(parms, "BT_SCO", value, sizeof(value));
+    if (ret >= 0) {
+        adev->bt_sco_reroute ^= !strcmp(value, AUDIO_PARAMETER_VALUE_ON);
+        if (strcmp(value, AUDIO_PARAMETER_VALUE_ON) != 0){
+            adev->bt_wb_speech_enabled = false;
+        }
+    }
+    ALOGD("%s:bt_wb_speech_enabled = %d, sco reroute=%u",
+            __func__, adev->bt_wb_speech_enabled, adev->bt_sco_reroute);
+
     pthread_mutex_unlock(&adev->lock);
     str_parms_destroy(parms);
     return status;
@@ -3848,6 +3856,8 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
     in->device = devices & ~AUDIO_DEVICE_BIT_IN;
     in->io_handle = handle;
     in->channel_mask = config->channel_mask;
+    in->resampler = NULL;
+
     if (in->device & AUDIO_DEVICE_IN_HDMI) {
         ALOGD("HDMI-In: use low latency");
         flags |= AUDIO_INPUT_FLAG_FAST;
@@ -3855,11 +3865,11 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
     in->flags = flags;
     struct pcm_config *pcm_config = flags & AUDIO_INPUT_FLAG_FAST ?
                                             &pcm_config_in_low_latency : &pcm_config_in;
-#ifdef BT_AP_SCO
-    if (adev->mode == AUDIO_MODE_IN_COMMUNICATION && in->device & AUDIO_DEVICE_IN_BLUETOOTH_SCO_HEADSET) {
+
+    if (in->device & AUDIO_DEVICE_IN_BLUETOOTH_SCO_HEADSET) {
         pcm_config = &pcm_config_in_bt;
+        pcm_config->rate = adev->bt_wb_speech_enabled? 16000:8000;
     }
-#endif
 
     in->config = pcm_config;
 
@@ -3868,24 +3878,6 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
     if (!in->buffer) {
         ret = -ENOMEM;
         goto err_malloc;
-    }
-
-    if ((in->requested_rate != 0) && (in->requested_rate != pcm_config->rate)) {
-        in->buf_provider.get_next_buffer = get_next_buffer;
-        in->buf_provider.release_buffer = release_buffer;
-
-        ALOGD("pcm_config->rate:%d,in->requested_rate:%d,in->channel_mask:%d",
-              pcm_config->rate,in->requested_rate,audio_channel_count_from_in_mask(in->channel_mask));
-        ret = create_resampler(pcm_config->rate,
-                               in->requested_rate,
-                               audio_channel_count_from_in_mask(in->channel_mask),
-                               RESAMPLER_QUALITY_DEFAULT,
-                               &in->buf_provider,
-                               &in->resampler);
-        if (ret != 0) {
-            ret = -EINVAL;
-            goto err_resampler;
-        }
     }
 
     if (in->device&AUDIO_DEVICE_IN_HDMI) {
@@ -3902,6 +3894,7 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
         ALOGE("crate voice process failed!");
     }
 #endif
+
 out:
     *stream_in = &in->stream;
     return 0;
@@ -4069,6 +4062,9 @@ static int adev_open(const hw_module_t* module, const char* name,
     /* adev->cur_route_id initial value is 0 and such that first device
      * selection is always applied by select_devices() */
     *device = &adev->hw_device.common;
+
+    adev->bt_wb_speech_enabled = false;
+    adev->bt_sco_reroute = 0;
 
     adev_open_init(adev);
     return 0;
