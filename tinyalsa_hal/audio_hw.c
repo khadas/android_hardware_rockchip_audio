@@ -1205,7 +1205,7 @@ static int get_next_buffer(struct resampler_buffer_provider *buffer_provider,
             return in->read_status;
         }
 
-        if (in->config->channels == 2) {
+        if (in->config->channels == 2 && (!(in->device & AUDIO_DEVICE_IN_HDMI))) {
             if (in->channel_flag & CH_CHECK) {
                 if (in->start_checkcount < SAMPLECOUNT) {
                     in->start_checkcount += size;
