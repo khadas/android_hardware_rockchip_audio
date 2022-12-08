@@ -547,7 +547,7 @@ void route_pcm_open(uint32_t route)
     }
 #endif
 
-    ALOGV("route_pcm_open() route %d", route);
+    ALOGD("route_pcm_open() route %d", route);
 
     is_playback = is_playback_route(route);
 
@@ -640,7 +640,7 @@ void route_pcm_card_open(int card, uint32_t route)
     }
 #endif
 
-    ALOGV("route_pcm_card_open(card %d, route %d)", card, route);
+    ALOGD("route_pcm_card_open(card %d, route %d)", card, route);
 
     is_playback = is_playback_route(route);
 
