@@ -75,6 +75,94 @@
 
 #define HDMI_BITSTREAM_BYPASS "ELD Bypass Switch"
 
+static struct pcm_config pcm_config = {
+    .channels = 2,
+    .rate = 48000,
+    .period_size = 480,
+    .period_count = 4,
+    .format = PCM_FORMAT_S16_LE,
+};
+
+static struct pcm_config pcm_config_in = {
+    .channels = 2,
+    .rate = 48000,
+    .period_size = 480,   // 10ms
+    .period_count = 4,
+    .format = PCM_FORMAT_S16_LE,
+};
+
+static struct pcm_config pcm_config_in_low_latency = {
+    .channels = 2,
+    .rate = 48000,
+    .period_size = 256,
+    .period_count = 4,
+    .format = PCM_FORMAT_S16_LE,
+};
+
+static struct pcm_config pcm_config_sco = {
+    .channels = 1,
+    .rate = 8000,
+    .period_size = 128,
+    .period_count = 4,
+    .format = PCM_FORMAT_S16_LE,
+};
+
+/* for bt client call*/
+static struct pcm_config pcm_config_hfp = {
+    .channels = 2,
+    .rate = 48000,
+    .period_size = 256,
+    .period_count = 4,
+};
+
+static struct pcm_config pcm_config_ap_sco = {
+    .channels = 2,
+    .rate = 8000,
+    .period_size = 80,
+    .period_count = 4,
+};
+
+static struct pcm_config pcm_config_in_bt = {
+    .channels = 2,
+    .rate = 8000,
+    .period_size = 120,
+    .period_count = 4,
+    .format = PCM_FORMAT_S16_LE,
+};
+
+static struct pcm_config pcm_config_deep = {
+    .channels = 2,
+    .rate = 48000,
+    /* FIXME This is an arbitrary number, may change.
+     * Dynamic configuration based on screen on/off is not implemented;
+     * let's see what power consumption is first to see if necessary.
+     */
+    .period_size = 8192,
+    .period_count = 4,
+    .format = PCM_FORMAT_S16_LE,
+};
+
+static struct pcm_config pcm_config_hdmi_multi = {
+    .channels = 6, /* changed when the stream is opened */
+    .rate = HDMI_MULTI_DEFAULT_SAMPLING_RATE,
+    .period_size = 1024,
+    .period_count = 4,
+    .format = PCM_FORMAT_S16_LE,
+};
+
+static struct pcm_config pcm_config_direct = {
+    .channels = 2,
+    .rate = 48000,
+    .period_size = 1024,
+    .period_count = 4,
+
+#ifdef IEC958_FORAMT
+    .format = PCM_FORMAT_IEC958_SUBFRAME_LE,
+#else
+    .format = PCM_FORMAT_S24_LE,
+#endif
+};
+
 struct SurroundFormat {
     audio_format_t format;
     const char *value;
