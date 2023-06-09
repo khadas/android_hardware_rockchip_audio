@@ -40,17 +40,17 @@
 #ifdef PRIMARY_HAL
 #define LOG_TAG "modules.primary.audio_hal"
 #endif
-#ifdef HDMI_HAL
-#define LOG_TAG "modules.hdmi.audio_hal"
+#ifdef EXT_1_HAL
+#define LOG_TAG "modules.ext_1.audio_hal"
 #endif
-#ifdef HDMI_1_HAL
-#define LOG_TAG "modules.hdmi_1.audio_hal"
+#ifdef EXT_2_HAL
+#define LOG_TAG "modules.ext_2.audio_hal"
 #endif
-#ifdef SPDIF_HAL
-#define LOG_TAG "modules.spdif.audio_hal"
+#ifdef EXT_3_HAL
+#define LOG_TAG "modules.ext_3.audio_hal"
 #endif
-#ifdef SPDIF_1_HAL
-#define LOG_TAG "modules.spdif_1.audio_hal"
+#ifdef EXT_4_HAL
+#define LOG_TAG "modules.ext_4.audio_hal"
 #endif
 
 #include "alsa_audio.h"
@@ -238,7 +238,7 @@ unsigned getOutputRouteFromDevice(uint32_t device)
     case AUDIO_DEVICE_OUT_BLUETOOTH_SCO_CARKIT:
         return BLUETOOTH_NORMAL_ROUTE;
     case AUDIO_DEVICE_OUT_AUX_DIGITAL:
-#ifdef SUPPORT_MULTIAUDIO
+#ifdef SUPPORT_VX_ROCKCHIP
     case VX_ROCKCHIP_OUT_HDMI0:
 #endif
         return HDMI_NORMAL_ROUTE;
@@ -1176,7 +1176,8 @@ static int start_output_stream(struct stream_out *out)
                 }
             }
         }
-#ifdef SUPPORT_MULTIAUDIO
+
+#ifdef SUPPORT_VX_ROCKCHIP
         if (out->devices[i] == VX_ROCKCHIP_OUT_SPDIF0) {
             card = adev->dev_out[SND_OUT_SOUND_CARD_SPDIF_1].card;
             device = adev->dev_out[SND_OUT_SOUND_CARD_SPDIF_1].device;
@@ -1191,6 +1192,7 @@ static int start_output_stream(struct stream_out *out)
             if (ret < 0) return ret;
         }
 #endif
+
         if (audio_is_bluetooth_out_sco_device(out->devices[i])) {
             card = adev->dev_out[SND_OUT_SOUND_CARD_BT].card;
             device = adev->dev_out[SND_OUT_SOUND_CARD_BT].device;

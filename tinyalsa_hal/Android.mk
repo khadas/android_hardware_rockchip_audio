@@ -90,6 +90,7 @@ commonSharedLibraries := liblog libcutils libaudioutils libaudioroute libhardwar
 ifneq (1, $(strip $(shell expr $(PLATFORM_SDK_VERSION) \< 31)))
     commonSharedLibraries += libtinyalsa_iec958
     commonCFlags += -DIEC958_FORAMT
+    commonCFlags += -DSUPPORT_VX_ROCKCHIP
 else
     commonSharedLibraries += libtinyalsa
 endif
@@ -122,63 +123,63 @@ LOCAL_STATIC_LIBRARIES := $(commonStaticLibraries)
 LOCAL_MODULE_TAGS := optional
 include $(BUILD_SHARED_LIBRARY)
 
-#make *.hdmix.*.so *.spdifx.*.so for multiaudio
+#make extend hal so for multiaudio
 ifeq ($(strip $(BOARD_SUPPORT_MULTIAUDIO)), true)
-#hdmi hal
+#1 extend hal
 include $(CLEAR_VARS)
-LOCAL_MODULE := audio.hdmi.$(TARGET_BOARD_HARDWARE)
+LOCAL_MODULE := audio.ext_1.$(TARGET_BOARD_HARDWARE)
 LOCAL_PROPRIETARY_MODULE := true
 LOCAL_MODULE_RELATIVE_PATH := hw
 LOCAL_SRC_FILES := $(commonSrcFiles)
 LOCAL_C_INCLUDES += $(commonCIncludes)
 LOCAL_HEADER_LIBRARIES += libhardware_headers
 LOCAL_CFLAGS := $(commonCFlags)
-LOCAL_CFLAGS += -DHDMI_HAL
+LOCAL_CFLAGS += -DEXT_1_HAL
 LOCAL_SHARED_LIBRARIES := $(commonSharedLibraries)
 LOCAL_STATIC_LIBRARIES := $(commonStaticLibraries)
 LOCAL_MODULE_TAGS := optional
 include $(BUILD_SHARED_LIBRARY)
 
-#hdmi_1 hal
+#2 extend hal
 include $(CLEAR_VARS)
-LOCAL_MODULE := audio.hdmi_1.$(TARGET_BOARD_HARDWARE)
+LOCAL_MODULE := audio.ext_2.$(TARGET_BOARD_HARDWARE)
 LOCAL_PROPRIETARY_MODULE := true
 LOCAL_MODULE_RELATIVE_PATH := hw
 LOCAL_SRC_FILES := $(commonSrcFiles)
 LOCAL_C_INCLUDES += $(commonCIncludes)
 LOCAL_HEADER_LIBRARIES += libhardware_headers
 LOCAL_CFLAGS := $(commonCFlags)
-LOCAL_CFLAGS += -DHDMI_1_HAL
+LOCAL_CFLAGS += -DEXT_2_HAL
 LOCAL_SHARED_LIBRARIES := $(commonSharedLibraries)
 LOCAL_STATIC_LIBRARIES := $(commonStaticLibraries)
 LOCAL_MODULE_TAGS := optional
 include $(BUILD_SHARED_LIBRARY)
 
-#spdif hal
+#3 extend hal
 include $(CLEAR_VARS)
-LOCAL_MODULE := audio.spdif.$(TARGET_BOARD_HARDWARE)
+LOCAL_MODULE := audio.ext_3.$(TARGET_BOARD_HARDWARE)
 LOCAL_PROPRIETARY_MODULE := true
 LOCAL_MODULE_RELATIVE_PATH := hw
 LOCAL_SRC_FILES := $(commonSrcFiles)
 LOCAL_C_INCLUDES += $(commonCIncludes)
 LOCAL_HEADER_LIBRARIES += libhardware_headers
 LOCAL_CFLAGS := $(commonCFlags)
-LOCAL_CFLAGS += -DSPDIF_HAL
+LOCAL_CFLAGS += -DEXT_3_HAL
 LOCAL_SHARED_LIBRARIES := $(commonSharedLibraries)
 LOCAL_STATIC_LIBRARIES := $(commonStaticLibraries)
 LOCAL_MODULE_TAGS := optional
 include $(BUILD_SHARED_LIBRARY)
 
-#spdif_1 hal
+#4 extend hal
 include $(CLEAR_VARS)
-LOCAL_MODULE := audio.spdif_1.$(TARGET_BOARD_HARDWARE)
+LOCAL_MODULE := audio.ext_4.$(TARGET_BOARD_HARDWARE)
 LOCAL_PROPRIETARY_MODULE := true
 LOCAL_MODULE_RELATIVE_PATH := hw
 LOCAL_SRC_FILES := $(commonSrcFiles)
 LOCAL_C_INCLUDES += $(commonCIncludes)
 LOCAL_HEADER_LIBRARIES += libhardware_headers
 LOCAL_CFLAGS := $(commonCFlags)
-LOCAL_CFLAGS += -DSPDIF_1_HAL
+LOCAL_CFLAGS += -DEXT_4_HAL
 LOCAL_SHARED_LIBRARIES := $(commonSharedLibraries)
 LOCAL_STATIC_LIBRARIES := $(commonStaticLibraries)
 LOCAL_MODULE_TAGS := optional
