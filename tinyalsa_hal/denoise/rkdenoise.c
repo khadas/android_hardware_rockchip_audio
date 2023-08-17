@@ -289,7 +289,7 @@ int rkdenoise_process(hrkdeniose context, void *bufferin, int bytes, void *buffe
     DENOISE_STATE *pDenoiseState = (DENOISE_STATE *)context;
 
     if (pDenoiseState == NULL) {
-        ALOGE("%s: pDenoiseState NULL", __FUNCTION__);
+        //ALOGE("%s: pDenoiseState NULL", __FUNCTION__);
         return -1;
     }
     if (pDenoiseState->flag & ALG_SPX) {

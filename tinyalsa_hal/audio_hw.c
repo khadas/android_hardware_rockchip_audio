@@ -214,6 +214,7 @@ FILE *in_debug;
 
 int in_dump(const struct audio_stream *stream, int fd);
 int out_dump(const struct audio_stream *stream, int fd);
+static inline bool hasExtCodec();
 
 /**
  * @brief get_output_device_id
@@ -557,6 +558,7 @@ struct dev_proc_info MIC_IN_NAME[] =
     {"rockchiprt5640c", NULL,},
     {"rockchiprt5670c", NULL,},
     {"rockchiprt5672c", NULL,},
+    {"rockchipsoundmi", NULL,},
     {NULL, NULL}, /* Note! Must end with NULL, else will cause crash */
 };
 
@@ -728,10 +730,14 @@ static bool get_specified_in_dev(struct dev_info *devinfo,
 
     while (match[i].cid) {
         score = name_match(id, match[i].cid);
-        if (score > better) {
+        if (score >= better) {
             better = score;
             index = i;
         }
+		/*else if(100 == score && !strcmp(match[i].cid, "rockchipes8316c")){
+            better = score;
+            index = i;
+		}*/
         i++;
     }
 
@@ -745,8 +751,8 @@ static bool get_specified_in_dev(struct dev_info *devinfo,
         devinfo->card = card;
         devinfo->device = 0;
         devinfo->score = better;
-        ALOGD("%s card, got card=%d,device=%d", devinfo->id,
-              devinfo->card, devinfo->device);
+        ALOGD("%s card, got card=%d,device=%d(%d)", devinfo->id,
+              devinfo->card, devinfo->device,__LINE__);
         return true;
     }
 
@@ -774,8 +780,8 @@ static bool get_specified_in_dev(struct dev_info *devinfo,
             devinfo->card = card;
             devinfo->device = device;
             devinfo->score = better;
-            ALOGD("%s card, got card=%d,device=%d", devinfo->id,
-                  devinfo->card, devinfo->device);
+            ALOGD("%s card, got card=%d,device=%d(%d)", devinfo->id,
+                  devinfo->card, devinfo->device,__LINE__);
             return true;
         }
     }
@@ -915,6 +921,25 @@ static void read_in_sound_card(struct stream_in *in)
     }
     dumpdev_info("in", device->dev_in, SND_IN_SOUND_CARD_MAX);
     return ;
+}
+
+inline bool hasExtCodec()
+{
+    char line[80];
+    bool ret = false;
+    FILE *fd = fopen("proc/asound/cards","r");
+    if(NULL != fd){
+      memset(line, 0, 80);
+      while((fgets(line,80,fd))!= NULL){
+          line[80-1]='\0';
+          if(strstr(line,"rockchipes8316c")){
+              ret = true;
+              break;
+          }
+      }
+      fclose(fd);
+    }
+    return ret;
 }
 
 static uint32_t channel_check(void *data, unsigned int len)
@@ -1206,6 +1231,10 @@ static int start_output_stream(struct stream_out *out)
     open_sound_card_policy(out);
 #endif
 #endif
+	if(hasExtCodec()){
+		out->devices[0] = AUDIO_DEVICE_OUT_SPEAKER;
+		ALOGD("hlm force rockchipes8316c audio out devices[0] = 0x%x",out->devices[0]);
+	}
 
     for (int i = 0; i < out->num_configs; ++i) {
         ALOGD("%s: i = %d, device = 0x%x", __FUNCTION__, i, out->devices[i]);
@@ -1243,7 +1272,8 @@ static int start_output_stream(struct stream_out *out)
         if (out->devices[i] == AUDIO_DEVICE_OUT_SPEAKER ||
             out->devices[i] == AUDIO_DEVICE_OUT_WIRED_HEADSET ||
             out->devices[i] == AUDIO_DEVICE_OUT_WIRED_HEADPHONE ||
-	    out->devices[i] == AUDIO_DEVICE_OUT_BUS) {
+	        out->devices[i] == AUDIO_DEVICE_OUT_BUS ||
+			out->devices[i] == AUDIO_DEVICE_OUT_ALL_SCO) {
             audio_devices_t route_device = out->devices[i];
             route_pcm_card_open(adev->dev_out[SND_OUT_SOUND_CARD_SPEAKER].card, getRouteFromDevice(route_device));
             card = adev->dev_out[SND_OUT_SOUND_CARD_SPEAKER].card;
